@@ -1,5 +1,53 @@
 import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import "./App.css";
+
+const addressPattern = /^[A-Za-zÀ-ÿʻʼ' -]+ shahar,\s*[A-Za-zÀ-ÿʻʼ' -]+ tumani,\s*[A-Za-zÀ-ÿʻʼ' -]+ mahallasi$/i;
+
+const schema = yup.object({
+  firstName: yup
+    .string()
+    .trim()
+    .required("Ism kiritilishi shart")
+    .min(3, "Kamida 3 ta harfdan iborat bo'lishi kerak")
+    .max(20, "Maksimum 20 ta harfdan iborat bo'lishi kerak"),
+  lastName: yup
+    .string()
+    .trim()
+    .required("Familiya kiritilishi shart")
+    .min(5, "Kamida 5 ta harfdan iborat bo'lishi kerak")
+    .max(25, "Maksimum 25 ta harfdan iborat bo'lishi kerak"),
+  age: yup
+    .number()
+    .transform((value, originalValue) =>
+      originalValue === "" || originalValue === null ? undefined : value
+    )
+    .typeError("Yosh kiriting")
+    .required("Yosh kiriting")
+    .min(16, "Kamida 16 yosh")
+    .max(99, "99 dan katta bo'lmasligi kerak"),
+  gender: yup.string().required("Jinsni tanlang"),
+  birthDate: yup.string().required("Sana tanlang"),
+  phone: yup
+    .string()
+    .required("Telefon raqam kiriting")
+    .matches(/^\+998\d{9}$/, "Masalan: +998901234567"),
+  address: yup
+    .string()
+    .trim()
+    .required("Manzilni kiriting")
+    .matches(
+      addressPattern,
+      "Masalan: Toshkent shahar, Chilonzor tumani, Bunyodkor mahallasi"
+    ),
+  about: yup
+    .string()
+    .trim()
+    .required("Bu maydonni to'ldiring")
+    .min(30, "Kamida 30 ta belgi yozing")
+    .max(200, "Maksimum 200 ta belgi yozing"),
+});
 
 function Field({ id, label, error, children }) {
   const errorId = error ? `${id}-error` : undefined;
@@ -39,7 +87,10 @@ function App() {
     handleSubmit,
     formState: { errors, isSubmitted },
     reset,
-  } = useForm({ mode: "onTouched" });
+  } = useForm({
+    mode: "onTouched",
+    resolver: yupResolver(schema),
+  });
 
   const errorCount = Object.keys(errors).length;
 
@@ -96,10 +147,7 @@ function App() {
                   <input
                     type="text"
                     placeholder="Ismingiz"
-                    {...register("firstName", {
-                      required: "Ism kiritilishi shart",
-                      minLength: { value: 3, message: "Kamida 3 ta harf" },
-                    })}
+                    {...register("firstName")}
                     {...fieldProps}
                   />
                 )}
@@ -110,10 +158,7 @@ function App() {
                   <input
                     type="text"
                     placeholder="Familiyangiz"
-                    {...register("lastName", {
-                      required: "Familiya kiritilishi shart",
-                      minLength: { value: 5, message: "Kamida 5 ta harf" },
-                    })}
+                    {...register("lastName")}
                     {...fieldProps}
                   />
                 )}
@@ -126,11 +171,7 @@ function App() {
                   <input
                     type="number"
                     placeholder="Yoshingiz"
-                    {...register("age", {
-                      required: "Yosh kiriting",
-                      min: { value: 16, message: "Kamida 16 yosh" },
-                      max: { value: 99, message: "99 dan katta bo'lmasligi kerak" },
-                    })}
+                    {...register("age")}
                     {...fieldProps}
                   />
                 )}
@@ -139,7 +180,7 @@ function App() {
               <Field id="gender" label="Jinsi" error={errors.gender}>
                 {(fieldProps) => (
                   <select
-                    {...register("gender", { required: "Jinsni tanlang" })}
+                    {...register("gender")}
                     {...fieldProps}
                   >
                     <option value="">Tanlang</option>
@@ -154,7 +195,7 @@ function App() {
               {(fieldProps) => (
                 <input
                   type="date"
-                  {...register("birthDate", { required: "Sana tanlang" })}
+                  {...register("birthDate")}
                   {...fieldProps}
                 />
               )}
@@ -169,13 +210,7 @@ function App() {
                 <input
                   type="tel"
                   placeholder="+998901234567"
-                  {...register("phone", {
-                    required: "Telefon raqam kiriting",
-                    pattern: {
-                      value: /^\+998\d{9}$/,
-                      message: "Masalan: +998901234567",
-                    },
-                  })}
+                  {...register("phone")}
                   {...fieldProps}
                 />
               )}
@@ -186,15 +221,7 @@ function App() {
                 <input
                   type="text"
                   placeholder="Toshkent shahar, Chilonzor tumani, Bunyodkor mahallasi"
-                  {...register("address", {
-                    required: "Manzilni kiriting",
-                    pattern: {
-                      value:
-                        /^[A-Za-zÀ-ÿʻʼ' -]+ shahar,\s*[A-Za-zÀ-ÿʻʼ' -]+ tumani,\s*[A-Za-zÀ-ÿʻʼ' -]+ mahallasi$/i,
-                      message:
-                        "Masalan: Toshkent shahar, Chilonzor tumani, Bunyodkor mahallasi",
-                    },
-                  })}
+                  {...register("address")}
                   {...fieldProps}
                 />
               )}
@@ -209,11 +236,7 @@ function App() {
                 <textarea
                   rows="5"
                   placeholder="O'zingiz haqida yozing..."
-                  {...register("about", {
-                    required: "Bu maydonni to'ldiring",
-                    minLength: { value: 30, message: "Kamida 30 ta belgi yozing" },
-                    maxLength: { value: 200, message: "Maksimum 200 ta belgi yozing" },
-                  })}
+                  {...register("about")}
                   {...fieldProps}
                 />
               )}
